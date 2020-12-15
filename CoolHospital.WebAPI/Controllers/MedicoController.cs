@@ -1,4 +1,7 @@
+using System.Collections.Generic;
+using AutoMapper;
 using CoolHospital.WebAPI.Data;
+using CoolHospital.WebAPI.Dtos;
 using CoolHospital.WebAPI.Models;
 using Microsoft.AspNetCore.Mvc;
 
@@ -10,17 +13,21 @@ namespace CoolHospital.WebAPI.Controllers
     public class MedicoController : ControllerBase
     {
         private readonly IRepository _repo;
-        public MedicoController(IRepository repo)
+        private readonly IMapper _mapper;
+        public MedicoController(IRepository repo, IMapper mapper)
         {
             _repo = repo;
+            _mapper = mapper;
         }
 
         [HttpGet]
         public IActionResult Get()
         {
-             var result = _repo.GetAllMedicos(true);
+             var medico = _repo.GetAllMedicos(false);
+
+             var medicoResult = _mapper.Map<IEnumerable<MedicoDto>>(medico);
              
-            return Ok(result);
+            return Ok(medicoResult);
 
         }
 
@@ -31,7 +38,9 @@ namespace CoolHospital.WebAPI.Controllers
              
             if (result == null) return BadRequest("Médico não encontrado");
 
-            return Ok(result);
+            var medicoDto = _mapper.Map<MedicoDto>(result);
+
+            return Ok(medicoDto);
 
         }
 
@@ -47,46 +56,48 @@ namespace CoolHospital.WebAPI.Controllers
         }
 
         [HttpPost]
-        public IActionResult Post(Medico medico)
+        public IActionResult Post(MedicoRegistrarDto model)
         {
-           // var result = _repo.GetAllPacientesByEspecialidadeId(especialidadeId, false);
-             
+            var medico = _mapper.Map<Medico>(model);
+
             _repo.Add(medico);
             if (_repo.SaveChanges())
             {
-                return Created($"/api/medico/{medico.Id}", medico);
+                return Created($"/api/medico/{model.Id}", _mapper.Map<MedicoDto>(medico));
             } 
 
                 return BadRequest("Médico não cadastrado");
         }
 
         [HttpPut("{id}")]
-        public IActionResult Put(int id, Medico medico)
+        public IActionResult Put(int id, MedicoRegistrarDto model)
         {
-            var result = _repo.GetMedicoById(id, true);
+            var medico = _repo.GetMedicoById(id, true);
 
-            if (result == null) return BadRequest("Médico não encontrado");
+            if (medico == null) return BadRequest("Médico não encontrado");
              
+            _mapper.Map(model, medico); 
             _repo.Update(medico);
             if (_repo.SaveChanges())
             {
-                return Created($"/api/medico/{medico.Id}", medico);
+                return Created($"/api/medico/{model.Id}", _mapper.Map<MedicoDto>(medico));
             } 
 
                 return BadRequest("Médico não alterado");
         }
 
         [HttpPatch("{id}")]
-        public IActionResult Patch(int id, Medico medico)
+        public IActionResult Patch(int id, MedicoRegistrarDto model)
         {
-            var result = _repo.GetMedicoById(id, true);
+            var medico = _repo.GetMedicoById(id, true);
 
-            if (result == null) return BadRequest("Médico não encontrado");
+            if (medico == null) return BadRequest("Médico não encontrado");
              
+            _mapper.Map(model, medico); 
             _repo.Update(medico);
             if (_repo.SaveChanges())
             {
-                return Created($"/api/medico/{medico.Id}", medico);
+                return Created($"/api/medico/{model.Id}", _mapper.Map<MedicoDto>(medico));
             } 
 
                 return BadRequest("Médico não alterado");

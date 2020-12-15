@@ -1,4 +1,5 @@
 using System;
+using AutoMapper;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -32,6 +33,8 @@ namespace CoolHospital.WebAPI
                context => context.UseSqlite(Configuration.GetConnectionString("Default"))
             );
 
+            services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
+
             services.AddScoped<IRepository, Repository>();
 
             services.AddControllers()
@@ -39,6 +42,8 @@ namespace CoolHospital.WebAPI
                         Opt => Opt.SerializerSettings.ReferenceLoopHandling = 
                          Newtonsoft.Json.ReferenceLoopHandling.Ignore
                     );
+
+            
 
             services.AddCors();
         }

@@ -1,5 +1,8 @@
+using System.Collections.Generic;
 using System.Threading.Tasks;
+using AutoMapper;
 using CoolHospital.WebAPI.Data;
+using CoolHospital.WebAPI.Dtos;
 using CoolHospital.WebAPI.Models;
 using Microsoft.AspNetCore.Mvc;
 
@@ -11,83 +14,90 @@ namespace CoolHospital.WebAPI.Controllers
     public class PacienteController : ControllerBase
     {
         private readonly IRepository _repo;
-        public PacienteController(IRepository repo)
+        private readonly IMapper _mapper;
+        public PacienteController(IRepository repo, IMapper mapper)
         {
             _repo = repo;
+            _mapper = mapper;
         }
 
         [HttpGet]
         public IActionResult Get()
         {
-             var result = _repo.GetAllPacientes(false);
+             var paciente = _repo.GetAllPacientes(true);
+             var pacienteResult = _mapper.Map<IEnumerable<PacienteDto>>(paciente);
              
-            return Ok(result);
+            return Ok(pacienteResult);
 
         }
 
         [HttpGet("{id}")]
         public IActionResult GetById(int id)
         {
-            var result = _repo.GetPacienteById(id, true);
+            var paciente = _repo.GetPacienteById(id, true);
              
-            if (result == null) return BadRequest("Paciente não encontrado");
+            if (paciente == null) return BadRequest("Paciente não encontrado");
 
-            return Ok(result);
+            var pacienteDto = _mapper.Map<PacienteDto>(paciente);
+
+            return Ok(pacienteDto);
 
         }
 
         [HttpGet("ByEspecialidadeId/{especialidadeId}")]
         public IActionResult GetByEspecialidadeId(int especialidadeId)
         {
-            var result = _repo.GetAllPacientesByEspecialidadeId(especialidadeId, false);
+            var paciente = _repo.GetAllPacientesByEspecialidadeId(especialidadeId, false);
              
-            if (result == null) return BadRequest("Especialidade não encontrada");
+            if (paciente == null) return BadRequest("Especialidade não encontrada");
 
-            return Ok(result);
+            return Ok(paciente);
 
         }
 
         [HttpPost]
-        public IActionResult Post(Paciente paciente)
+        public IActionResult Post(PacienteRegistrarDto model)
         {
-           // var result = _repo.GetAllPacientesByEspecialidadeId(especialidadeId, false);
-             
+            var paciente = _mapper.Map<Paciente>(model);         
+
             _repo.Add(paciente);
             if (_repo.SaveChanges())
             {
-                return Created($"/api/paciente/{paciente.Id}", paciente);
+                return Created($"/api/paciente/{model.Id}", _mapper.Map<PacienteDto>(paciente));
             } 
 
                 return BadRequest("Paciente não cadastrado");
         }
 
         [HttpPut("{id}")]
-        public IActionResult Put(int id, Paciente paciente)
+        public IActionResult Put(int id, PacienteRegistrarDto model)
         {
-            var result = _repo.GetPacienteById(id, true);
+            var paciente = _repo.GetPacienteById(id, true);
 
-            if (result == null) return BadRequest("Paciente não encontrado");
+            if (paciente == null) return BadRequest("Paciente não encontrado");
              
+            _mapper.Map(model, paciente);
             _repo.Update(paciente);
             if (_repo.SaveChanges())
             {
-                return Created($"/api/paciente/{paciente.Id}", paciente);
+                return Created($"/api/paciente/{model.Id}", _mapper.Map<PacienteDto>(paciente));
             } 
 
                 return BadRequest("Paciente não alterado");
         }
 
         [HttpPatch("{id}")]
-        public IActionResult Patch(int id, Paciente paciente)
+        public IActionResult Patch(int id, PacienteRegistrarDto model)
         {
-            var result = _repo.GetPacienteById(id, true);
+            var paciente = _repo.GetPacienteById(id, true);
 
-            if (result == null) return BadRequest("Paciente não encontrado");
+            if (paciente == null) return BadRequest("Paciente não encontrado");
              
+            _mapper.Map(model, paciente); 
             _repo.Update(paciente);
             if (_repo.SaveChanges())
             {
-                return Created($"/api/paciente/{paciente.Id}", paciente);
+                return Created($"/api/paciente/{model.Id}", _mapper.Map<PacienteDto>(paciente));
             } 
 
                 return BadRequest("Paciente não alterado");
